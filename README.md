@@ -1,2 +1,2 @@
-# sicss-rutgers-2021
-Tasks related to the Summer Institute in Computational Social Science at Rutgers University. 
+# SICSS Rutgers 2021
+Tasks, scripts, notes, and data related to the Summer Institute in Computational Social Science at Rutgers University. 
