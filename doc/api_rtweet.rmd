@@ -1,0 +1,18 @@
+---
+title: "API via Rtweet"
+author: "Cory J. Cascalheira"
+date: "5/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load dependencies
+library(tidyverse)
+library(rtweet)
+```
+
+## Application Programming Interfaces in R
+
+I take more specific notes on using APIs with rtweet, of which I have some preliminary experience from Datacamp. I have also used APIs for the QueST project (i.e., IPHub). 

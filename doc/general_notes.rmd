@@ -1,0 +1,41 @@
+---
+title: "General Notes"
+author: "Cory J. Cascalheira"
+date: "5/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Links to General Notes for SICSS Rutgers
+
+- [What is digital trace data and why should we consider using it in social science?](https://sicss.io/2020/materials/day2-digital-trace-data/strengths-weaknesses/rmarkdown/Strengths_and_Weaknesses.html)
+- [How to use APIs in R](https://sicss.io/2020/materials/day2-digital-trace-data/apis/rmarkdown/Application_Programming_interfaces.html)
+
+### Strengths / Weaknesses of Digital Trace Data
+
+**Strengths**
+- Analyze events as they unfold
+- Less social desirability bias---close to actual experience
+- Capture social relationships
+
+**Weaknesses**
+- Many services are private
+- Usually not representative of the US population
+- People drift to new platforms
+- Algorithms may return unintended results (e.g., Google Flu)
+- Unstructured data---lots of cleaning necessary
+- Ethical considerations---do users consent to sharing their data?
+- Positive bias due to a desire to perform for others
+
+Weakness of the [Reddit Dataset](https://docs.google.com/spreadsheets/d/1I7cvuCBQxosQK2evTcdL3qtglaEPc0WFEs6rZMx-xiE/edit#gid=0)
+1. Not representative 
+2. New platforms emerging (e.g., Discord?)
+3. Unstructured data with lots of images, links, headers, emojis, etc.
+
+I downloaded an article by Bail (2015) that discusses how to use digital trace data with survey research---I want to do this! Digital traces of minority stress---textual features of minority stress---combined with survey data to achieve triangulation. 
+
+### Application Programming Interfaces in R
+
