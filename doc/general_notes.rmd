@@ -12,7 +12,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Links to General Notes for SICSS Rutgers
 
 - [What is digital trace data and why should we consider using it in social science?](https://sicss.io/2020/materials/day2-digital-trace-data/strengths-weaknesses/rmarkdown/Strengths_and_Weaknesses.html)
-- [How to use APIs in R](https://sicss.io/2020/materials/day2-digital-trace-data/apis/rmarkdown/Application_Programming_interfaces.html)
+- [How to use APIs in R?](https://sicss.io/2020/materials/day2-digital-trace-data/apis/rmarkdown/Application_Programming_interfaces.html)
+- [How to perform screens-craping in R?](https://sicss.io/2020/materials/day2-digital-trace-data/screenscraping/rmarkdown/Screenscraping.html)
+- [How to create a bot for social science research?](https://sicss.io/2020/materials/day2-digital-trace-data/building-apps-bots/rmarkdown/Building_Apps_and_Bots_for%20Social_Science_Research.html)
 
 ### Strengths / Weaknesses of Digital Trace Data
 
@@ -37,5 +39,65 @@ Weakness of the [Reddit Dataset](https://docs.google.com/spreadsheets/d/1I7cvuCB
 
 I downloaded an article by Bail (2015) that discusses how to use digital trace data with survey research---I want to do this! Digital traces of minority stress---textual features of minority stress---combined with survey data to achieve triangulation. 
 
+### Screen Scraping in R
+
+Definition = extract data from web pages that typically do not offer an API. 
+
+Steps:
+1. Load the web page
+2. Download the HTML or XML
+3. Locate specific information
+4. Place information into a data frame
+
+#### Legality
+
+Always examine the terms and conditions before screen-scraping. 
+
+Look for a robots.txt file. 
+
+Never publish a paper on data that was screen-scraped from a website that prohibits automatic data collection.
+
+#### Why Use It?
+
+Simple websites from governments can be useful, such as screen-scraping hate crime data. Even if websites allow screen-scraping, it is usually a time-consuming process; code typically does not generalize to different web pages. 
+
+Often best to screen-scrape with a for loop which, again, is usually site-specific. 
+
+For procedural information, see the tutorial documentation in the **/doc** folder.
+
 ### Application Programming Interfaces in R
 
+Typically easier logistically and legal, so superior to screen-scraping, although APIs are not available for all websites. APIs have two functions:
+1. provide data to developers and programmers; and
+2. analyze data (i.e., facial recognition APIs).
+
+Which websites have APIs available? Check out [Programmable Web](https://www.programmableweb.com/apis/directory). Many APIs return JSON data. 
+
+For a list of other APIs, check out these website, too:
+
+* https://docs.google.com/spreadsheets/d/1ZEr3okdlb0zctmX0MZKo-gZKPsq5WGn1nJOxPV7al-Q/edit?usp=sharing=
+* https://github.com/toddmotto/public-apis
+* https://apilist.fun/
+* https://ropensci.org/packages/
+
+**Rate limiting** = a temporary block on API access after a certain number of requests are made.
+
+**Throttle** = a reduced capacity to make API calls after a certain number of requests are made. 
+
+## Creating Bots
+
+Creating apps is one way researchers can use digital trace data with survey research. [Read this article](https://drive.google.com/file/d/0Byvk0A8Ic21YMC1SNHIzWU5jSXc/view).
+
+* Can use authentication feature as an informed consent process.
+* [An example of how to use the app](https://www.pnas.org/content/pnas/113/42/11823.full.pdf?with-ds=yes).
+* Build apps using Shiny and [start with these tutorials](https://shiny.rstudio.com/tutorial/). The survey can be designed in Shiny and API calls to social media can be incorporated. 
+
+Creating bots in another trend in social science research. For examples, see the original post (e.g., using bots to stop racist comments).
+
+Ethical standards must be held high. IRB often do not know how to advise research that uses bots. 
+
+#### How to Create a Bot
+
+Create the bot script and host it on a cloud-based server. When ready to try this, find tutorials online. 
+
+H

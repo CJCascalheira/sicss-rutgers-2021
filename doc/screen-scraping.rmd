@@ -1,0 +1,46 @@
+---
+title: "Screen-Scraping"
+author: "Cory J. Cascalheira"
+date: "5/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Dependencies
+library(tidyverse)
+library(rvest)
+library(selectr)
+```
+
+## Screenscraping
+
+Coding from the [screen-scraping](https://sicss.io/2020/materials/day2-digital-trace-data/screenscraping/rmarkdown/Screenscraping.html) tutorial.
+
+**REMEMBER**: never screen-scrape a website if automatic data collection is prohibited; examine the *Terms and Conditions* first.
+
+```{r}
+# Download HTML from a simple web page
+wikipedia_page <- read_html("https://en.wikipedia.org/wiki/World_Health_Organization_ranking_of_health_systems_in_2000")
+wikipedia_page
+```
+
+To locate the desire information, use the developer tools in your web browser. 
+
+After identifying the section of code to extract, extract the code by copying the Xpath (i.e., the "finger print" of the exact section of code). 
+
+Pass the Xpath to the following function. 
+
+```{r}
+# Identify the correct node using the Xpath
+section_of_wikipedia <- html_node(wikipedia_page, xpath = "//*[@id=\"mw-content-text\"]/div/table")
+head(section_of_wikipedia)
+
+# Since this is a table, print the table
+html_table(section_of_wikipedia)
+```
+
+Consider screen-scraping complex web pages with the [selector gadget](https://selectorgadget.com/) web extension. [Read more here](https://sicss.io/2020/materials/day2-digital-trace-data/screenscraping/rmarkdown/Screenscraping.html).
+
+More complex options are available, such as using [RSelenium](https://cran.r-project.org/web/packages/RSelenium/vignettes/basics.html), which allows a user to access their web browser from Rstudio.

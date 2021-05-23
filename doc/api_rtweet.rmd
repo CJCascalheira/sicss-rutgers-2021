@@ -1,7 +1,7 @@
 ---
 title: "API via Rtweet"
 author: "Cory J. Cascalheira"
-date: "5/16/2021"
+date: "05/20/2021"
 output: html_document
 ---
 
@@ -11,8 +11,165 @@ knitr::opts_chunk$set(echo = TRUE)
 # Load dependencies
 library(tidyverse)
 library(rtweet)
+library(maps)
+library(lubridate)
 ```
 
 ## Application Programming Interfaces in R
 
-I take more specific notes on using APIs with rtweet, of which I have some preliminary experience from Datacamp. I have also used APIs for the QueST project (i.e., IPHub). 
+I take more specific [notes on using APIs with rtweet](https://sicss.io/2020/materials/day2-digital-trace-data/apis/rmarkdown/Application_Programming_interfaces.html#rate-limiting), of which I have some preliminary experience from Datacamp. I have also used APIs for the QueST project (i.e., IPHub). 
+
+```{r}
+# Set the API keys from the system environment
+api_key <- Sys.getenv("TWITTER_API")
+api_secret_key <- Sys.getenv("TWITTER_API_SECRET")
+
+# Create the token
+token <- create_token(
+  app = "tokens4rtweet",
+  consumer_key = api_key,
+  consumer_secret = api_secret_key)
+```
+
+From the previous chunk, a browser tab should be open showing that rtweet has made an API connection to Twitter.
+
+Now we can search for tweets related to the coronavirus.
+
+```{r}
+# COVID-19 tweets
+covid_19_tweets <- search_tweets("coronavirus", n = 4000)
+```
+
+What does the new R object contain?
+
+```{r}
+# Get the variable names
+names(covid_19_tweets)
+
+# See first 6 tweets
+head(covid_19_tweets$text)
+```
+
+These data can be used to create informative plots. 
+
+```{r}
+# Line plot of tweets overtime
+ts_plot(covid_19_tweets, "secs") +
+  theme_minimal() +
+  labs(
+    title = "Frequency of Tweets about Covid-19 Around 1pm, May 20, 2021",
+    subtitle = "Tweet counts aggregated by second",
+    caption = "\nSource: Data collected from Twitter's REST API via rtweet"
+  )
+```
+
+```{r}
+# Search for USA English tweets
+covid_geo_tweets <- search_tweets("coronavirus",
+  "lang:en", geocode = lookup_coords("usa"), 
+  n = 3000, type="recent", include_rts=FALSE
+  )
+
+# Get the latitude and longitude of the geocode
+geocoded <- lat_lng(covid_geo_tweets)
+
+# Map these geolocation data
+par(mar = c(0, 0, 0, 0))
+map("world", lwd = .25)
+with(geocoded, points(lng, lat, pch = 20, cex = .50, col = rgb(0, .3, .7, .75)))
+```
+
+We can collect data on a specific user, but we are limited to requesting 3,200 tweets.
+
+```{r}
+# Collect data from Senator Bernie Sanders: http://www.twitter.com/SenSanders
+sanders_tweets <- get_timelines(c("sensanders"), n = 5)
+head(sanders_tweets$text)
+```
+
+rtweet allows us to pull information from a Twitter user's profile
+
+```{r}
+# Create Sanders profile
+sanders_twitter_profile <- lookup_users("sensanders")
+
+# Print information from the profile to the console
+sanders_twitter_profile$description
+sanders_twitter_profile$location
+sanders_twitter_profile$followers_count
+```
+
+Which are the tweets that Sen. Sanders has recently liked?
+
+```{r}
+# Top five most recent favorite tweets
+sanders_favorites<-get_favorites("sensanders", n = 5)
+sanders_favorites$text
+```
+
+Use the **post_tweet()** function to post to Twitter from R.
+
+```{r}
+# Print trends in an area
+get_trends("New York")
+```
+
+## Working with Loops
+
+Before starting a loop with APIs, a crucial step is setting the rate limit.
+
+```{r}
+# Twitter rate limit information
+rate_limits <- rate_limit()
+
+# For Twitter, rate limits reset every 15 mins
+head(rate_limits[,1:4])
+```
+
+To see how loops work, first we need to load a list of elected officials.
+
+```{r}
+# Load list of twitter handles for elected officials
+elected_officials<-read.csv("https://cbail.github.io/Senators_Twitter_Data.csv", stringsAsFactors = FALSE)
+
+# Check out the data frame
+head(elected_officials)
+```
+
+Now we can create a loop to gather information.
+
+```{r}
+# Create empty container to store tweets for each elected official
+elected_official_tweets<-as.data.frame(NULL)
+
+# Loop to gather tweets
+for(i in 1:nrow(elected_officials)){
+
+  # pull tweets
+  tweets <- get_timeline(elected_officials$twitter_id[i], n = 10)
+  
+  # populate dataframe
+  elected_official_tweets <- rbind(elected_official_tweets, tweets)
+  
+  # pause for five seconds to further prevent rate limiting
+  Sys.sleep(5)
+  
+  # print number/iteration for debugging/monitoring progress
+  print(i)
+}
+```
+
+## Working with Timestamps
+
+In order to work with dates, we must covert Twitter timestamps into datetimes
+
+```{r}
+# Show timestamps
+head(covid_19_tweets$created_at)
+
+# Convert to datetime
+covid_19_tweets %>%
+  mutate(created_at = ymd_hms(created_at))
+```
+
+If you need to access an API, but there is no R package for it, consider using the source code from rtweet and other API-based packages for inspiration.
