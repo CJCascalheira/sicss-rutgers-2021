@@ -99,5 +99,3 @@ Ethical standards must be held high. IRB often do not know how to advise researc
 #### How to Create a Bot
 
 Create the bot script and host it on a cloud-based server. When ready to try this, find tutorials online. 
-
-H
