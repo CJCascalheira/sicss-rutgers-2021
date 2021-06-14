@@ -13,17 +13,24 @@ library(tidyverse)
 library(stringr)
 
 # For text analysis
+library(topicmodels)
 library(tm)
 library(tidytext)
+library(stm)
 
 # Stemming in tidytext
 library(SnowballC)
 
 # For removing URLs and weird language from text
-library(gdap)
+#library(gdap)
 
 # Load data
 load(url("https://cbail.github.io/Trump_Tweets.Rdata"))
+data("AssociatedPress")
+
+# Setting up the data for STM
+google_doc_id <- "1LcX-JnpGB0lU1iDnXnxB6WFqBywUKpew" # google file ID
+poliblogs <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", google_doc_id), stringsAsFactors = FALSE)
 ```
 
 ## Text Analysis Basics
@@ -146,7 +153,7 @@ inspect(trump_dtm[1:5, 3:8])
   - If I know the words very well, then create a dictionary.
   - If exploratory, then use unsupervised methods (get a sense of the land / themes).
 
-Thus, I may want to state with an unsupervised method first when detecting features of minority stress in textual data. Get a lay of the land first, then go back in and use dictionary analysis. Bail calls a hybrid approach "supervised."
+Thus, I may want to start with an unsupervised method first when detecting features of minority stress in textual data. Get a lay of the land first, then go back in and use dictionary analysis. Bail calls a hybrid approach "supervised."
 
 ```{r}
 # Just the top words
@@ -282,3 +289,128 @@ Typically a high-quality tool worth using, but the subtleties may not be capture
 Note that false positives and false negative are common no matter what. 
 
 Not sure which sentiment analysis to use? See Goncalves et al. (2013). Different sentiment dictionaries perform well in different contexts. The paper shows that no sentiment dictionary was as accurate as human coding.  
+
+## Topic Modeling
+
+Identify latent themes in a corpus (e.g., large group of text). Used to identify features in corpus. 
+
+**If I am looking for features for the MS project, then topic modeling might be a helpful approach. I would probably need to reduce a large corpus to posts that I think are related to minority stress, and then perform topic modeling? A supervised labeling approach might be better because MS theory is well-established.**
+
+### Latent Dirichlet Allocation (LDA)
+
+- LDA requires us to specific the number of topics ahead of time. **This might not be effective for the MS project. For example, the 3 to 4 "classic" proximal stressors may not be discussed on social media platforms, especially since private traits are harder to estimate (hence why I will probably start with distal stressors).**
+- Mixed membership modeling (e.g., words can belong to more than one topic).
+- A *k* will need to be adjusted iteratively.
+- If a topic seems to have a bunch of random words, then we have likely under- or overestimated the *k* number of topics.
+
+REMEMBER: document-term matrix has each document as a row and each term (i.e., word) as a column.
+
+Challenges with topic models, and cluster analyses in general, is the difficulty with interpretation. High-quality human validation is required. Also, a systematic approach is needed. Try a range of *k* values to reduce bias (i.e., choose the *k* with topics that meet your expectations).
+
+With latent constructs, it is hard to determine which words are reliably associated with a topic. 
+
+DO NOT LET THE ALGORITHM DO ALL THE WORK.
+
+```{r}
+# Create a topic model using LDA
+AP_topic_model <- LDA(AssociatedPress, 
+                      # Number of topics
+                      k = 10,
+                      # Make the LDA reproducible
+                      control = list(seed = 321))
+
+# Probability of each word being asoociated with a topic 
+AP_topics <- tidy(AP_topic_model, matrix = "beta")
+
+# Count top ten words
+ap_top_terms <- 
+  AP_topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+# Plot the words by topic
+ap_top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+
+## Structural Topic Modeling
+
+- Roberts et al. (2015) 
+- Similar to LDA, but uses meta data from a document to improve classification.
+- For example, STM allows the inclusion of covariates, which improve the probability of classification.
+- Lots of useful packages.
+- Can use goodness of fit measures to determine value of *k*.
+
+**STM might be a good fit for my MS project. Added to lab notebook. What would be the covariates?**
+
+Preprocess the data.
+
+```{r}
+# Preprocess - specify where meta data are located
+processed <- textProcessor(poliblogs$documents, metadata = poliblogs)
+```
+
+Store each required component of the STM---documents, meta data, vocabulary---as separate object.
+
+```{r}
+# Create the components
+out <- prepDocuments(processed$documents, processed$vocab, processed$meta)
+
+# Assign the components to objects
+docs <- out$documents
+vocab <- out$vocab
+meta <-out$meta
+```
+
+Create the STM.
+
+```{r}
+# Create STM
+First_STM <- stm(documents = out$documents, vocab = out$vocab,
+              K = 10, 
+              # Determine how meta data is used
+              prevalence =~ rating + s(day),
+              max.em.its = 75, data = out$meta,
+              init.type = "Spectral", verbose = FALSE)
+
+# Plot STM
+plot(First_STM)
+```
+
+Now that the topics are created, we can expect them to learn more about the topics.
+
+```{r}
+findThoughts(First_STM, texts = poliblogs$documents,
+     n = 2, topics = 3)
+```
+
+There are also ways to find the optimal number of *k*. However, given the size of the corpus, note that this operation takes a long time (i.e., see [this website for the code](https://sicss.io/2020/materials/day3-text-analysis/topic-modeling/rmarkdown/Topic_Modeling.html)).
+
+It is also possible to examine the meta data. These steps are found on see [this website for the code](https://sicss.io/2020/materials/day3-text-analysis/topic-modeling/rmarkdown/Topic_Modeling.html).
+
+- Possible to determine how the topics vary with the covariates (e.g., is the topic more likely to be spoken by democrats or republicans?).
+- Show distribution of topics over time.
+- Do not need to add ALL meta data; be selective. Add RICH meta data that:
+  - (a) is likely to influence the construction of the topic; or
+  - (b) may be an important predictor of the topics.
+
+### Limitations of Topic Models
+
+- LDA and STM are not good for short texts, such as tweets.
+  - **Solutions** = check out stLDA-C (Tierney et al.) if using Twitter data. It will cluster topics AND users (i.e., users most at risk for MS experiences?)
+- Danger = no idea what is in the corpus, then might mind false negatives, spurious patterns, bag-of-words assumption (i.e., word order does not matter).
+  - Sometimes bag-of-words are not useful assumptions.
+
+## Text Networks
+
+**Network** = group of nodes where edges are connections between them.
+- Draw edges between the words (i.e., nodes) or the authors.
+- Author network = useful if I want to cluster people by the way they talk.
+
+If I want to do this, then use the **textnets package**.
