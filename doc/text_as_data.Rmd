@@ -33,6 +33,29 @@ google_doc_id <- "1LcX-JnpGB0lU1iDnXnxB6WFqBywUKpew" # google file ID
 poliblogs <- read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", google_doc_id), stringsAsFactors = FALSE)
 ```
 
+
+## Text Data = Latent Variables
+
+When we look at text, we often care about something else---an indirect, latent variable.
+
+Text is an imperfect manifestation of some unobserved concept.
+
+- Background concept = negativity / **minority stress**
+- Systematized concept = negative emotion in politics represents an individual's orientation toward costs/benefits of a given issue 
+  - How to operationalize this?
+- Indicator = negative words minus positive words
+- Scores = final scores
+
+What is the difference between my concept and the data?
+
+**Resources**
+
+- quanteda.io
+- tidytextmining.com 
+- STM package
+- TM package
+- snsoroka.com/data-lexicoder (for political texts)
+
 ## Text Analysis Basics
 
 **Character encoding** = numeric representation of textual symbols (e.g., unicode, UTF-8).

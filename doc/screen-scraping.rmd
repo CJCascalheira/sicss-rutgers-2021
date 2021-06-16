@@ -1,7 +1,7 @@
 ---
-title: "Screen-Scraping"
+title: "Screen Scraping"
 author: "Cory J. Cascalheira"
-date: "5/16/2021"
+date: "6/16/2021"
 output: html_document
 ---
 
@@ -13,6 +13,22 @@ library(tidyverse)
 library(rvest)
 library(selectr)
 ```
+
+## How to Get Digital Trace Data?
+
+1. Screen scraping
+2. APIs
+3. Application and bots
+
+## Screen Scraping - SICSS 2012 notes
+
+Need to identify XML data.
+
+Will usually work with regular expressions. 
+
+[How to test regular expressions](https://regex101.com/).
+
+May need to modify get requests.
 
 ## Screenscraping
 

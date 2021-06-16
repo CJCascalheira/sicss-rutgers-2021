@@ -1,0 +1,251 @@
+---
+title: "Screenscraping"
+output:
+  ioslides_presentation:
+    logo: RUTGERS_S_RED.png
+editor_options:
+  chunk_output_type: console
+---
+
+
+<style>
+pre {
+  white-space: pre !important;
+  overflow-y: scroll !important;
+}
+
+.gdbar img {
+  width: 500px !important;
+  height: 150px !important;
+  margin: 10px 10px;
+}
+
+.gdbar {
+  width: 550px !important;
+  height: 170px !important;
+}
+
+slides > slide:not(.nobackground):before {
+  width: 300px;
+  height: 75px;
+  background-size: 0px 0px;
+}
+
+</style>
+
+```{r setup, include=FALSE}
+```
+
+
+## Screenscraping
+
+
+- Screenscraping and gathering online trace data
+- Very useful for automating tasks and collecting large amounts of data
+- Unlike APIs, require custom solutions
+- Requires basic knowledge of XML, Xpath, HTTP Requests
+
+## XML
+
+- eXtensible Markup Language is a general approach to presenting information
+- HTML is one example of XML 
+- HTML documents follow a common structure: hierarchical collection of nodes
+
+## HTML Structure
+
+- Basic unit in HMTL is the *element* or *node*
+- Each element begins with a start tag and ends with an end tag: `
+<title></title>, <paragraph></paragraph>`
+- Nodes can follow a nested structure:
+```
+    <section>
+      <paragraph>
+      </paragraph>
+      <reference>
+      </reference>
+    </section>
+```
+- Nodes can also have attributes:
+
+```
+    <a href="www.google.com">A link!</a>
+```
+
+## Regular Expressions
+
+- Searching and querying strings using Regular Expressions
+- Basic string manipulations using `stringr::str_extract()` and `stringr::str_replace()`
+- Easy to recover exact matches: `str_extract(x,"gray")` will find an instance of `gray`
+- Brackets denote character classes: `str_extract(x,"gr[ea]y")` will match either `grey` or `gray`
+- Quantifiers apply to preceding character, match the character multiple times: * = match 0 or more times
+- `str_extract(x,"gr[ea]*y")` matches `gry,greeey,graay,etc.`
+- Many more options!
+
+## HTTP Requests
+
+- HTTP is the language of the internet: vast majority of online interactions take place via HTTP
+  <center>
+ ![User-Server Communication](http.png)
+ </center>
+- Most common HTTP requests are GET and POST request to receive and send data
+
+## Accessing Websites
+
+```{r, echo = T}
+library(rvest)
+wikipedia <-read_html(
+"https://en.wikipedia.org/wiki/World_Health_Organization_ranking_of_health_systems_in_2000")
+class(wikipedia)
+```
+
+## Xpath
+
+- Xpath is a query language for XML/HTML documents
+- Very useful in locating parts of the HTML document
+- Can use Xpath with `html_element` command:
+```{r, echo=T}
+listOfANodes <- html_elements(wikipedia,xpath= '//a[@href]')
+listOfANodes[1]
+title <- html_element(wikipedia,xpath = "//title")
+html_text(title)
+```
+
+
+## Accessing HTML Elements
+```{r, echo = T}
+section_of_wikipedia <- html_node(wikipedia,
+              xpath='//*[@id="mw-content-text"]/div/table') 
+mytable <- html_table(section_of_wikipedia)
+head(mytable)
+```
+
+## Another Example {.build}
+
+- This website has an easier structure: http://varycss.org/groups.html
+- Can you identify the table XPath and extract the element on your own?
+
+```{r, echo=T}
+## url for webpage
+varycss <- read_html("http://varycss.org/groups.html")
+
+## locate the table component of the html
+groups <- html_node(varycss, xpath = '//table[1]')
+
+## extract the table
+mytable2 <- html_table(groups)
+
+```
+## Another Example
+- Scraping multiple links
+
+```{r,echo=T}
+aoc <- read_html("https://ocasio-cortez.house.gov/issues")
+issues <- html_nodes(aoc, xpath = '//*[(@id = "block-menu-block-section-menu")]//a')
+issuetitles <- html_text(issues)
+head(issuetitles)
+```
+## Another Example
+```{r,echo=T}
+## We want just the links, so we will use html_attr with href
+issuelinks <- html_attr(issues, 'href')
+issuelinks[1]
+issueurls <- paste("https://ocasio-cortez.house.gov", issuelinks, sep="")
+## Let's build a dataframe for storage
+aocplatform <- data.frame(issues = issuetitles, url = issueurls,
+                          text = NA)
+```
+
+
+## Forms
+- May need to send information to forms
+- Somewhat more involved than simply retrieving websites
+- Example: searching firms' addresses on Google
+```{r, echo=T}
+
+library(foreign)
+library(rvest)
+library(xml2)
+library(httr)
+library(stringr)
+
+firms <- read.csv("d:/users/andrey/dropbox/data/sicss 2021/firms2.csv")[,1]
+hq <- c()
+```
+
+## Forms
+
+```{r, echo=T}
+html <- read_html("http://www.google.com")
+search <- html_form(html)[[1]]
+search <- search %>% html_form_set(
+          q = paste(firms[1], "bloomberg",sep=" "), 
+                                     hl = "en")
+```
+
+## Forms
+```{r, echo=T}
+resp <- html_form_submit(search,submit="btnG")
+site <- read_html(resp)
+html_element(site,"*")
+  
+```
+
+## Locating HTML Elements
+- HTML structure can be complicated, but Xpath is very flexible
+- Can formulate searches using element-value pairs
+
+```{r, echo=T}
+
+  links <- html_elements(site,
+          xpath='//a[contains(@href, "bloomberg.com/profile")]')[1] %>%
+    html_attr("href")
+  print(links)
+
+```
+
+## Regular Expressions
+
+- Need to process link text to make links usable
+- Can use Regular Expressions to look for text patterns
+
+```{r, echo=T}
+s <- str_extract(links,"(?<=q=)(.*?)(?=&sa)")
+print(s)
+```
+
+## Locating, Extracting and Cleaning HTML Elements
+
+```{r,echo=T}
+ b <- read_html(s)
+ hq <- html_text(xml_siblings(
+    html_element(b,xpath='//h2[contains(text(),"ADDRESS")]')))
+ print(hq)
+ hq<- str_replace_all(hq,"\n"," ")
+ print(hq)
+```
+  
+## Looping Over Firms
+
+- Putting it all together in a loop
+- Need to be prepared for exceptions and error
+
+
+```
+
+  if(length(links)==0){hq[i] <- NA 
+  } else {
+  s <- str_extract(links,"(?<=q=)(.*?)(?=&sa)")
+  ...
+```
+- Good idea to have some time in between iterations
+```
+ t <- runif(1,5,10)
+  Sys.sleep(t)
+```
+
+## Scraping With a Browser
+- Some sites are difficult to scrape using HTTP requests
+- Javascript and other scripts require user's interaction with a browser
+- RSelenium: simulates a browser that can be controlled via R commands
+- Can interact directly with webpage through browser actions: filling forms, clicking buttons, selecting menus, etc.
+
